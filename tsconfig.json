@@ -2,7 +2,7 @@
     "compilerOptions": {
       "target": "es6",
       "rootDir": "src",
-      "outDir": "build/scripts",
+      "outDir": "docs/scripts",
       "watch": true,
     }
   }
