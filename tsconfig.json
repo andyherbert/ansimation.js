@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "rootDir": "src",
+      "outDir": "build/scripts",
+      "watch": true,
+    }
+  }

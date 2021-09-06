@@ -1,0 +1,29 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ansimation.js</title>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+    <script type="module">
+        import { terminalDisplay } from "./scripts/ansimation.js";
+        terminalDisplay("./ans/LD-TFGS.ANS", {
+            fontPath: "./fonts",
+            scale: 1.0,
+            cursor: false,
+        }).then(
+            async ({canvas, play}) => {
+                document.body.appendChild(canvas);
+                await play();
+            },
+            err => console.error(err),
+        );
+    </script>
+</head>
+<body>
+    
+</body>
+</html>
