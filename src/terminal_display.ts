@@ -93,7 +93,7 @@ export class TerminalDisplay {
         this.font.clearAt(this.blinkOff, x, y);
     }
 
-    drawCode(code: number, fg: Rgb, bg: Rgb, blink: boolean, wrap: boolean) {
+    drawCode(code: number, fg: number, bg: number, blink: boolean, wrap: boolean) {
         if (this.cursorY == this.rows) {
             this.lineFeed(wrap);
         }

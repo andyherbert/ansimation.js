@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, SequenceType } from "./parser.js";
-import { ansiPalette } from "./palette.js";
 import { TerminalDisplay } from "./terminal_display.js";
 function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
     return () => __awaiter(this, void 0, void 0, function* () {
@@ -37,10 +36,10 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                             }
                             default: {
                                 if (terminalBlink) {
-                                    term.drawCode(code, ansiPalette[bold ? fg + 8 : fg], ansiPalette[bg], blink && terminalBlink, wrap);
+                                    term.drawCode(code, bold ? fg + 8 : fg, bg, blink && terminalBlink, wrap);
                                 }
                                 else {
-                                    term.drawCode(code, ansiPalette[bold ? fg + 8 : fg], ansiPalette[blink ? bg + 8 : bg], false, wrap);
+                                    term.drawCode(code, bold ? fg + 8 : fg, blink ? bg + 8 : bg, false, wrap);
                                 }
                                 while (sequence.pos > charCount) {
                                     charCount += charsPerFrame;

@@ -37,16 +37,16 @@ function terminalDisplayPlayer(
                                 if (terminalBlink) {
                                     term.drawCode(
                                         code,
-                                        ansiPalette[bold ? fg + 8 : fg],
-                                        ansiPalette[bg],
+                                        bold ? fg + 8 : fg,
+                                        bg,
                                         blink && terminalBlink,
                                         wrap,
                                     );
                                 } else {
                                     term.drawCode(
                                         code,
-                                        ansiPalette[bold ? fg + 8 : fg],
-                                        ansiPalette[blink ? bg + 8 : bg],
+                                        bold ? fg + 8 : fg,
+                                        blink ? bg + 8 : bg,
                                         false,
                                         wrap,
                                     );

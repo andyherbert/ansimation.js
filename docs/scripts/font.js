@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import fetchBytes from "./fetch_bytes.js";
 import { createContext, createContextWithRGB } from "./context.js";
-import { black, white, brightWhite } from "./palette.js";
+import { white, brightWhite, ansiPalette } from "./palette.js";
 function getFileName(fontName) {
     switch (fontName) {
         case "IBM VGA":
@@ -321,24 +321,39 @@ export default class Font {
         this.width = null;
         this.height = null;
         this.glyphs = null;
+        this.indexedGlyphs = [];
+        this.indexedBackground = [];
         this.file = getFileName(name);
     }
     cursorAt(ctx, x, y) {
         ctx.drawImage(this.cursor.canvas, x, y);
     }
-    backgroundAt(ctx, x, y, rgb) {
-        this.background.fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
-        this.background.fillRect(0, 0, this.width, this.height);
-        ctx.drawImage(this.background.canvas, x, y);
+    backgroundAt(ctx, x, y, index) {
+        if (this.indexedBackground[index] == null) {
+            const rgb = ansiPalette[index];
+            this.background.fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
+            this.background.fillRect(0, 0, this.width, this.height);
+            this.indexedBackground[index] = createContext(this.width, this.height);
+            this.indexedBackground[index].drawImage(this.background.canvas, 0, 0);
+        }
+        ctx.drawImage(this.indexedBackground[index].canvas, x, y);
     }
     clearAt(ctx, x, y) {
-        this.backgroundAt(ctx, x, y, black);
+        this.backgroundAt(ctx, x, y, 0);
     }
     drawCodeAt(ctx, code, x, y, fg, bg) {
         this.backgroundAt(ctx, x, y, bg);
-        this.glyphs[code].fillStyle = `rgb(${fg.red}, ${fg.green}, ${fg.blue})`;
-        this.glyphs[code].fillRect(0, 0, this.width, this.height);
-        ctx.drawImage(this.glyphs[code].canvas, x, y);
+        if (this.indexedGlyphs[fg] == null) {
+            this.indexedGlyphs[fg] = [];
+        }
+        if (this.indexedGlyphs[fg][code] == null) {
+            const rgb = ansiPalette[fg];
+            this.glyphs[code].fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
+            this.glyphs[code].fillRect(0, 0, this.width, this.height);
+            this.indexedGlyphs[fg][code] = createContext(this.width, this.height);
+            this.indexedGlyphs[fg][code].drawImage(this.glyphs[code].canvas, 0, 0);
+        }
+        ctx.drawImage(this.indexedGlyphs[fg][code].canvas, x, y);
     }
     fetch(fontPath) {
         return __awaiter(this, void 0, void 0, function* () {

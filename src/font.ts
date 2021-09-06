@@ -1,7 +1,7 @@
 import fetchBytes from "./fetch_bytes.js";
 import { createContext, createContextWithRGB } from "./context.js";
 import Rgb from "./rgb.js";
-import { black, white, brightWhite } from "./palette.js";
+import { black, white, brightWhite, ansiPalette } from "./palette.js";
 
 function getFileName(fontName: string): string {
     switch (fontName) {
@@ -315,7 +315,9 @@ export default class Font {
     width: number | null = null;
     height: number | null = null;
     glyphs: CanvasRenderingContext2D[] | null = null;
+    indexedGlyphs: CanvasRenderingContext2D[][] = [];
     background: CanvasRenderingContext2D;
+    indexedBackground: CanvasRenderingContext2D[] = [];
     cursor: CanvasRenderingContext2D;
 
     constructor(name: string) {
@@ -326,14 +328,19 @@ export default class Font {
         ctx.drawImage(this.cursor.canvas, x, y);
     }
 
-    backgroundAt(ctx: CanvasRenderingContext2D, x: number, y: number, rgb: Rgb) {
-        this.background.fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
-        this.background.fillRect(0, 0, this.width, this.height);
-        ctx.drawImage(this.background.canvas, x, y);
+    backgroundAt(ctx: CanvasRenderingContext2D, x: number, y: number, index: number) {
+        if (this.indexedBackground[index] == null)  {
+            const rgb = ansiPalette[index];
+            this.background.fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
+            this.background.fillRect(0, 0, this.width, this.height);
+            this.indexedBackground[index] = createContext(this.width, this.height);
+            this.indexedBackground[index].drawImage(this.background.canvas, 0, 0);
+        }
+        ctx.drawImage(this.indexedBackground[index].canvas, x, y);
     }
 
     clearAt(ctx: CanvasRenderingContext2D, x: number, y: number) {
-        this.backgroundAt(ctx, x, y, black);
+        this.backgroundAt(ctx, x, y, 0);
     }
 
     drawCodeAt(
@@ -341,13 +348,21 @@ export default class Font {
         code: number,
         x: number,
         y: number,
-        fg: Rgb,
-        bg: Rgb,
-    ) {
+        fg: number,
+        bg: number,
+        ) {
         this.backgroundAt(ctx, x, y, bg);
-        this.glyphs[code].fillStyle = `rgb(${fg.red}, ${fg.green}, ${fg.blue})`;
-        this.glyphs[code].fillRect(0, 0, this.width, this.height);
-        ctx.drawImage(this.glyphs[code].canvas, x, y);
+        if (this.indexedGlyphs[fg] == null) {
+            this.indexedGlyphs[fg] = [];
+        }
+        if (this.indexedGlyphs[fg][code] == null) {
+            const rgb = ansiPalette[fg];
+            this.glyphs[code].fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
+            this.glyphs[code].fillRect(0, 0, this.width, this.height);
+            this.indexedGlyphs[fg][code] = createContext(this.width, this.height);
+            this.indexedGlyphs[fg][code].drawImage(this.glyphs[code].canvas, 0, 0);
+        }
+        ctx.drawImage(this.indexedGlyphs[fg][code].canvas, x, y);
     }
 
     async fetch(fontPath: string) {
