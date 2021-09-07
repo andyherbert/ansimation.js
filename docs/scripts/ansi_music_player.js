@@ -230,13 +230,13 @@ export class AnsiMusicPlayer {
                 }
                 else {
                     switch (byte) {
-                        case 0x3e: {
+                        case 0x3c: {
                             // '<'
                             this.beeper.octave = Math.max(0, this.beeper.octave - 1);
                             yield term.redraw();
                             break;
                         }
-                        case 0x3c: {
+                        case 0x3e: {
                             // '>'
                             this.beeper.octave = Math.min(this.beeper.octave + 1, 6);
                             yield term.redraw();
@@ -279,6 +279,7 @@ export class AnsiMusicPlayer {
                             const pause = Number.parseInt(stringInt);
                             const dots = parseDots(bytes, pos + 1, term);
                             pos += dots;
+                            yield term.redraw();
                             if (pause >= 1 && pause <= 64) {
                                 yield this.beeper.pause(pause, term);
                             }
