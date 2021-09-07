@@ -7,18 +7,10 @@ function terminalDisplayPlayer(
     sequences: Sequence[],
     terminalBlink: boolean,
     baud: number,
-    cursor: boolean,
 ): () => Promise<void> {
     return async () => {
         const charsPerFrame = baud / 8 / 60;
         let charCount = 0;
-        let fg: number = 7;
-        let bg: number = 0;
-        let bold: boolean = false;
-        let blink: boolean = false;
-        let savedCursorPositionX: number | null = null;
-        let savedCursorPositionY: number | null = null;
-        let wrap = false;
         for (const sequence of sequences) {
             switch (sequence.type) {
                 case SequenceType.Literal: {
@@ -33,30 +25,18 @@ function terminalDisplayPlayer(
                                 break;
                             }
                             case 10: {
-                                term.lineFeed(wrap);
+                                term.lineFeed();
                                 break;
                             }
                             default: {
                                 if (terminalBlink) {
-                                    term.drawCode(
-                                        code,
-                                        bold ? fg + 8 : fg,
-                                        bg,
-                                        blink && terminalBlink,
-                                        wrap,
-                                    );
+                                    term.drawCode(code);
                                 } else {
-                                    term.drawCode(
-                                        code,
-                                        bold ? fg + 8 : fg,
-                                        blink ? bg + 8 : bg,
-                                        false,
-                                        wrap,
-                                    );
+                                    term.drawCode(code);
                                 }
                                 while (sequence.pos > charCount) {
                                     charCount += charsPerFrame;
-                                    await term.redraw(cursor);
+                                    await term.redraw();
                                 }
                                 break;
                             }
@@ -67,18 +47,18 @@ function terminalDisplayPlayer(
                 case SequenceType.SelectGraphicsRendition: {
                     for (const code of sequence.data) {
                         if (code == 0) {
-                            fg = 7;
-                            bg = 0;
-                            bold = false;
-                            blink = false;
+                            term.fg = 7;
+                            term.bg = 0;
+                            term.bold = false;
+                            term.blink = false;
                         } else if (code == 1) {
-                            bold = true;
+                            term.bold = true;
                         } else if (code == 5) {
-                            blink = true;
+                            term.blink = true;
                         } else if (code >= 30 && code <= 37) {
-                            fg = code - 30;
+                            term.fg = code - 30;
                         } else if (code >= 40 && code <= 47) {
-                            bg = code - 40;
+                            term.bg = code - 40;
                         }
                     }
                     break;
@@ -129,7 +109,7 @@ function terminalDisplayPlayer(
                             break;
                         }
                         case 2: {
-                            await term.clearScreen(cursor);
+                            await term.clearScreen();
                             break;
                         }
                     }
@@ -155,14 +135,19 @@ function terminalDisplayPlayer(
                 }
                 case SequenceType.SetScreenMode: {
                     if (sequence.data[0] == 7) {
-                        wrap = true;
+                        term.wrap = true;
                     }
                     break;
                 }
                 case SequenceType.ResetScreenMode: {
                     if (sequence.data[0] == 7) {
-                        wrap = true;
+                        term.wrap = false;
                     }
+                    break;
+                }
+                case SequenceType.MusicalSequence: {
+                    // await musicPlayer(sequence.data, term);
+                    charCount = sequence.pos;
                     break;
                 }
                 default: {
@@ -172,7 +157,7 @@ function terminalDisplayPlayer(
             }
         }
         while (true) {
-            await term.redraw(cursor);
+            await term.redraw();
         }
     };
 }
@@ -183,15 +168,15 @@ export async function terminalDisplay(
         scale = 1.0,
         fontName = "IBM VGA",
         fontPath = "./",
-        cursor = true,
-    }: { scale?: number; fontName?: string; fontPath?: string; cursor?: boolean } = {},
+        showCursor = true,
+    }: { scale?: number; fontName?: string; fontPath?: string; showCursor?: boolean } = {},
 ): Promise<any> {
-    const term: TerminalDisplay = new TerminalDisplay(80, 25);
+    const term: TerminalDisplay = new TerminalDisplay(80, 25, false, showCursor);
     const canvas = await term.fetchFont(fontName, fontPath, scale);
     const bytes = await fetchBytes(url);
     const sequences = parseSequences(bytes);
     return {
         canvas,
-        play: terminalDisplayPlayer(term, sequences, true, 57600, cursor),
+        play: terminalDisplayPlayer(term, sequences, true, 14000),
     };
 }

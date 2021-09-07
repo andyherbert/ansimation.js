@@ -10,17 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, SequenceType } from "./parser.js";
 import { TerminalDisplay } from "./terminal_display.js";
-function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
+function terminalDisplayPlayer(term, sequences, terminalBlink, baud) {
     return () => __awaiter(this, void 0, void 0, function* () {
         const charsPerFrame = baud / 8 / 60;
         let charCount = 0;
-        let fg = 7;
-        let bg = 0;
-        let bold = false;
-        let blink = false;
-        let savedCursorPositionX = null;
-        let savedCursorPositionY = null;
-        let wrap = false;
         for (const sequence of sequences) {
             switch (sequence.type) {
                 case SequenceType.Literal: {
@@ -35,19 +28,19 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                                 break;
                             }
                             case 10: {
-                                term.lineFeed(wrap);
+                                term.lineFeed();
                                 break;
                             }
                             default: {
                                 if (terminalBlink) {
-                                    term.drawCode(code, bold ? fg + 8 : fg, bg, blink && terminalBlink, wrap);
+                                    term.drawCode(code);
                                 }
                                 else {
-                                    term.drawCode(code, bold ? fg + 8 : fg, blink ? bg + 8 : bg, false, wrap);
+                                    term.drawCode(code);
                                 }
                                 while (sequence.pos > charCount) {
                                     charCount += charsPerFrame;
-                                    yield term.redraw(cursor);
+                                    yield term.redraw();
                                 }
                                 break;
                             }
@@ -58,22 +51,22 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                 case SequenceType.SelectGraphicsRendition: {
                     for (const code of sequence.data) {
                         if (code == 0) {
-                            fg = 7;
-                            bg = 0;
-                            bold = false;
-                            blink = false;
+                            term.fg = 7;
+                            term.bg = 0;
+                            term.bold = false;
+                            term.blink = false;
                         }
                         else if (code == 1) {
-                            bold = true;
+                            term.bold = true;
                         }
                         else if (code == 5) {
-                            blink = true;
+                            term.blink = true;
                         }
                         else if (code >= 30 && code <= 37) {
-                            fg = code - 30;
+                            term.fg = code - 30;
                         }
                         else if (code >= 40 && code <= 47) {
-                            bg = code - 40;
+                            term.bg = code - 40;
                         }
                     }
                     break;
@@ -124,7 +117,7 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                             break;
                         }
                         case 2: {
-                            yield term.clearScreen(cursor);
+                            yield term.clearScreen();
                             break;
                         }
                     }
@@ -150,14 +143,19 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                 }
                 case SequenceType.SetScreenMode: {
                     if (sequence.data[0] == 7) {
-                        wrap = true;
+                        term.wrap = true;
                     }
                     break;
                 }
                 case SequenceType.ResetScreenMode: {
                     if (sequence.data[0] == 7) {
-                        wrap = true;
+                        term.wrap = false;
                     }
+                    break;
+                }
+                case SequenceType.MusicalSequence: {
+                    // await musicPlayer(sequence.data, term);
+                    charCount = sequence.pos;
                     break;
                 }
                 default: {
@@ -167,19 +165,19 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
             }
         }
         while (true) {
-            yield term.redraw(cursor);
+            yield term.redraw();
         }
     });
 }
-export function terminalDisplay(url, { scale = 1.0, fontName = "IBM VGA", fontPath = "./", cursor = true, } = {}) {
+export function terminalDisplay(url, { scale = 1.0, fontName = "IBM VGA", fontPath = "./", showCursor = true, } = {}) {
     return __awaiter(this, void 0, void 0, function* () {
-        const term = new TerminalDisplay(80, 25);
+        const term = new TerminalDisplay(80, 25, false, showCursor);
         const canvas = yield term.fetchFont(fontName, fontPath, scale);
         const bytes = yield fetchBytes(url);
         const sequences = parseSequences(bytes);
         return {
             canvas,
-            play: terminalDisplayPlayer(term, sequences, true, 57600, cursor),
+            play: terminalDisplayPlayer(term, sequences, true, 14000),
         };
     });
 }

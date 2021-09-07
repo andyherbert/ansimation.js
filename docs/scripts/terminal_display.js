@@ -24,14 +24,21 @@ class Cursor {
     }
 }
 export class TerminalDisplay {
-    constructor(columns, rows) {
+    constructor(columns, rows, iceColors, showCursor) {
         this.blinkState = BlinkState.Off;
         this.cursor = new Cursor(0, 0);
         this.savedCursor = null;
+        this.fg = 7;
+        this.bg = 0;
+        this.bold = false;
+        this.blink = false;
+        this.wrap = false;
         this.columns = columns;
         this.rows = rows;
+        this.iceColors = iceColors;
+        this.showCursor = showCursor;
     }
-    redraw(cursor) {
+    redraw() {
         return __awaiter(this, void 0, void 0, function* () {
             yield new Promise((resolve) => window.requestAnimationFrame(resolve));
             switch (this.blinkState) {
@@ -41,7 +48,7 @@ export class TerminalDisplay {
                 }
                 case BlinkState.Off: {
                     this.buffer.drawImage(this.blinkOff.canvas, 0, 0);
-                    if (cursor) {
+                    if (this.showCursor) {
                         this.font.cursorAt(this.buffer, this.cursor.column, this.cursor.row);
                     }
                     break;
@@ -58,7 +65,7 @@ export class TerminalDisplay {
             this.buffer = createContext(width, height);
             this.blinkOn = createContext(width, height);
             this.blinkOff = createContext(width, height);
-            yield this.clearScreen(false);
+            yield this.clearScreen();
             this.interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
                 switch (this.blinkState) {
                     case BlinkState.On: {
@@ -80,7 +87,7 @@ export class TerminalDisplay {
             return this.buffer.canvas;
         });
     }
-    clearScreen(cursor) {
+    clearScreen() {
         return __awaiter(this, void 0, void 0, function* () {
             for (let column = 0; column < this.columns; column++) {
                 for (let row = 0; row < this.rows; row++) {
@@ -88,7 +95,7 @@ export class TerminalDisplay {
                 }
             }
             this.moveCursorTo(0, 0);
-            yield this.redraw(cursor);
+            yield this.redraw();
         });
     }
     clearToEndOfLine() {
@@ -132,54 +139,55 @@ export class TerminalDisplay {
         this.font.clearAt(this.blinkOn, column, row);
         this.font.clearAt(this.blinkOff, column, row);
     }
-    drawCode(code, fg, bg, blink, wrap) {
+    drawCode(code) {
         if (this.cursor.row == this.rows) {
-            this.lineFeed(wrap);
+            this.lineFeed();
         }
-        if (blink) {
-            this.font.backgroundAt(this.blinkOn, this.cursor.column, this.cursor.row, bg);
+        if (this.iceColors) {
+            const fg = this.bold ? this.fg + 8 : this.fg;
+            const bg = this.blink ? this.bg + 8 : this.bg;
+            this.font.drawCodeAt(this.blinkOn, code, this.cursor.column, this.cursor.row, fg, bg);
+            this.font.drawCodeAt(this.blinkOff, code, this.cursor.column, this.cursor.row, fg, bg);
         }
         else {
-            this.font.drawCodeAt(this.blinkOn, code, this.cursor.column, this.cursor.row, fg, bg);
-        }
-        this.font.drawCodeAt(this.blinkOff, code, this.cursor.column, this.cursor.row, fg, bg);
-        this.advanceCursor();
-    }
-    moveCursorTo(column, row) {
-        this.cursor.column = Math.min(Math.max(0, column), this.columns - 1);
-        this.cursor.row = Math.min(Math.max(0, row), this.rows - 1);
-    }
-    cursorUp(count) {
-        for (let i = 0; i < count; i++) {
-            if (this.cursor.row == 0) {
-                break;
+            const fg = this.bold ? this.fg + 8 : this.fg;
+            if (this.blink) {
+                this.font.backgroundAt(this.blinkOn, this.cursor.column, this.cursor.row, this.bg);
             }
-            this.cursor.row -= 1;
-        }
-    }
-    cursorDown(count) {
-        for (let i = 0; i < count; i++) {
-            if (this.cursor.row == this.rows - 1) {
-                break;
+            else {
+                this.font.drawCodeAt(this.blinkOn, code, this.cursor.column, this.cursor.row, fg, this.bg);
             }
+            this.font.drawCodeAt(this.blinkOff, code, this.cursor.column, this.cursor.row, fg, this.bg);
+        }
+        if (this.cursor.column == this.columns - 1) {
+            this.cursor.column = 0;
             this.cursor.row += 1;
         }
-    }
-    cursorForward(count) {
-        for (let i = 0; i < count; i++) {
-            if (this.cursor.column == this.columns - 1) {
-                break;
-            }
+        else {
             this.cursor.column += 1;
         }
     }
-    cursorBack(count) {
-        for (let i = 0; i < count; i++) {
-            if (this.cursor.column == 0) {
-                break;
-            }
-            this.cursor.column -= 1;
-        }
+    moveToColumn(column) {
+        this.cursor.column = Math.min(Math.max(0, column), this.columns - 1);
+    }
+    moveToRow(row) {
+        this.cursor.row = Math.min(Math.max(0, row), this.rows - 1);
+    }
+    moveCursorTo(column, row) {
+        this.moveToColumn(column);
+        this.moveToRow(row);
+    }
+    cursorUp(amount) {
+        this.moveToRow(this.cursor.row - amount);
+    }
+    cursorDown(amount) {
+        this.moveToRow(this.cursor.row + amount);
+    }
+    cursorForward(amount) {
+        this.moveToColumn(this.cursor.column + amount);
+    }
+    cursorBack(amount) {
+        this.moveToColumn(this.cursor.column - amount);
     }
     tab() {
         this.cursorForward(8);
@@ -187,21 +195,24 @@ export class TerminalDisplay {
     carriageReturn() {
         this.cursor.column = 0;
     }
-    lineFeed(wrap) {
+    scrollUp() {
+        const sy = this.font.height;
+        const width = this.buffer.canvas.width;
+        const height = this.buffer.canvas.height - this.font.height;
+        this.buffer.drawImage(this.buffer.canvas, 0, sy, width, height, 0, 0, width, height);
+        this.blinkOn.drawImage(this.blinkOn.canvas, 0, sy, width, height, 0, 0, width, height);
+        this.blinkOff.drawImage(this.blinkOff.canvas, 0, sy, width, height, 0, 0, width, height);
+        for (let x = 0; x < this.columns - 1; x++) {
+            this.clearAt(x, this.rows - 1);
+        }
+    }
+    lineFeed() {
         if (this.cursor.row == this.rows) {
-            if (wrap) {
+            if (this.wrap) {
                 this.cursor.row = 0;
             }
             else {
-                const sy = this.font.height;
-                const width = this.buffer.canvas.width;
-                const height = this.buffer.canvas.height - this.font.height;
-                this.buffer.drawImage(this.buffer.canvas, 0, sy, width, height, 0, 0, width, height);
-                this.blinkOn.drawImage(this.blinkOn.canvas, 0, sy, width, height, 0, 0, width, height);
-                this.blinkOff.drawImage(this.blinkOff.canvas, 0, sy, width, height, 0, 0, width, height);
-                for (let x = 0; x < this.columns - 1; x++) {
-                    this.clearAt(x, this.rows - 1);
-                }
+                this.scrollUp();
                 this.cursor.row -= 1;
             }
         }
@@ -216,15 +227,6 @@ export class TerminalDisplay {
         if (this.savedCursor != null) {
             this.moveCursorTo(this.savedCursor.column, this.savedCursor.row);
             this.savedCursor = null;
-        }
-    }
-    advanceCursor() {
-        if (this.cursor.column == this.columns - 1) {
-            this.cursor.column = 0;
-            this.cursor.row += 1;
-        }
-        else {
-            this.cursor.column += 1;
         }
     }
 }

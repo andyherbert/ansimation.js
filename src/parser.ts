@@ -14,6 +14,7 @@ export enum SequenceType {
     SavePosition,
     TrueColor,
     RestorePosition,
+    MusicalSequence,
     Unknown,
 }
 
@@ -70,6 +71,7 @@ enum ParseState {
     Literal,
     Escape,
     Sequence,
+    MusicalSequence,
 }
 
 export function parseSequences(bytes: Uint8Array): Sequence[] {
@@ -178,13 +180,18 @@ export function parseSequences(bytes: Uint8Array): Sequence[] {
                         case 0x6c: {
                             // 'l'
                             sequences.push(current.build(SequenceType.ResetScreenMode, pos));
-                            break;                            
+                            break;
                         }
                         case 0x6d: {
                             // 'm'
                             sequences.push(
                                 current.build(SequenceType.SelectGraphicsRendition, pos),
                             );
+                            break;
+                        }
+                        case 0x4d: {
+                            // 'M'
+                            state = ParseState.MusicalSequence;
                             break;
                         }
                         case 0x73: {
@@ -213,6 +220,21 @@ export function parseSequences(bytes: Uint8Array): Sequence[] {
                 } else if (byte == 0x3b) {
                     // ';'
                     current.insertValue();
+                }
+                break;
+            }
+            case ParseState.MusicalSequence: {
+                switch (byte) {
+                    case 0x0e: {
+                        // '♪'
+                        state = ParseState.Literal;
+                        const seq = current.build(SequenceType.MusicalSequence, pos);
+                        sequences.push(seq);
+                        break;
+                    }
+                    default: {
+                        current.push(byte);
+                    }
                 }
                 break;
             }

@@ -15,7 +15,8 @@ export var SequenceType;
     SequenceType[SequenceType["SavePosition"] = 12] = "SavePosition";
     SequenceType[SequenceType["TrueColor"] = 13] = "TrueColor";
     SequenceType[SequenceType["RestorePosition"] = 14] = "RestorePosition";
-    SequenceType[SequenceType["Unknown"] = 15] = "Unknown";
+    SequenceType[SequenceType["MusicalSequence"] = 15] = "MusicalSequence";
+    SequenceType[SequenceType["Unknown"] = 16] = "Unknown";
 })(SequenceType || (SequenceType = {}));
 export class Sequence {
     constructor(type, data, pos) {
@@ -63,6 +64,7 @@ var ParseState;
     ParseState[ParseState["Literal"] = 0] = "Literal";
     ParseState[ParseState["Escape"] = 1] = "Escape";
     ParseState[ParseState["Sequence"] = 2] = "Sequence";
+    ParseState[ParseState["MusicalSequence"] = 3] = "MusicalSequence";
 })(ParseState || (ParseState = {}));
 export function parseSequences(bytes) {
     let sequences = [];
@@ -176,6 +178,11 @@ export function parseSequences(bytes) {
                             sequences.push(current.build(SequenceType.SelectGraphicsRendition, pos));
                             break;
                         }
+                        case 0x4d: {
+                            // 'M'
+                            state = ParseState.MusicalSequence;
+                            break;
+                        }
                         case 0x73: {
                             // 's'
                             sequences.push(current.build(SequenceType.SavePosition, pos));
@@ -203,6 +210,21 @@ export function parseSequences(bytes) {
                 else if (byte == 0x3b) {
                     // ';'
                     current.insertValue();
+                }
+                break;
+            }
+            case ParseState.MusicalSequence: {
+                switch (byte) {
+                    case 0x0e: {
+                        // '♪'
+                        state = ParseState.Literal;
+                        const seq = current.build(SequenceType.MusicalSequence, pos);
+                        sequences.push(seq);
+                        break;
+                    }
+                    default: {
+                        current.push(byte);
+                    }
                 }
                 break;
             }
