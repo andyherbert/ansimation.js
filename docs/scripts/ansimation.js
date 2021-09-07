@@ -79,16 +79,11 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                     break;
                 }
                 case SequenceType.SavePosition: {
-                    savedCursorPositionX = term.cursorCol;
-                    savedCursorPositionY = term.cursorRow;
+                    term.saveCursor();
                     break;
                 }
                 case SequenceType.RestorePosition: {
-                    if (savedCursorPositionX != null && savedCursorPositionY != null) {
-                        term.moveCursorTo(savedCursorPositionX, savedCursorPositionY);
-                        savedCursorPositionX = null;
-                        savedCursorPositionY = null;
-                    }
+                    term.restoreCursor();
                     break;
                 }
                 case SequenceType.CursorUp: {
