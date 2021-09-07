@@ -72,7 +72,7 @@ export function parseSequences(bytes) {
     let state = ParseState.Literal;
     byteLoop: for (let pos = 0; pos < bytes.length; pos++) {
         const byte = bytes[pos];
-        switch (state) {
+        parseLoop: switch (state) {
             case ParseState.Literal: {
                 switch (byte) {
                     case 0x1a: {
@@ -181,7 +181,8 @@ export function parseSequences(bytes) {
                         case 0x4d: {
                             // 'M'
                             state = ParseState.MusicalSequence;
-                            break;
+                            current.push(byte);
+                            break parseLoop;
                         }
                         case 0x73: {
                             // 's'
@@ -216,10 +217,11 @@ export function parseSequences(bytes) {
             case ParseState.MusicalSequence: {
                 switch (byte) {
                     case 0x0e: {
-                        // '♪'
+                        // '♫'
                         state = ParseState.Literal;
                         const seq = current.build(SequenceType.MusicalSequence, pos);
                         sequences.push(seq);
+                        current = new SequenceBuilder();
                         break;
                     }
                     default: {

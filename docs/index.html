@@ -3,27 +3,35 @@
     <meta charset="UTF-8">
     <title>ansimation.js</title>
     <style>
-        canvas {
+        #play_button {
+            width: 100px;
+            height: 40px;
+            margin: 16px auto;
             display: block;
-            margin: 0 auto;
+        }
+        #canvas_container {
+            width: 640px;
+            height: 400px;
+            margin: 0px auto;
         }
     </style>
     <script type="module">
         import { terminalDisplay } from "./scripts/ansimation.js";
-        terminalDisplay("./ans/US-BK2.ICE", {
-            fontPath: "./fonts",
-            scale: 1.0,
-            showCursor: false,
-        }).then(
-            async ({canvas, play}) => {
-                document.body.appendChild(canvas);
-                await play();
-            },
-            err => console.error(err),
-        );
+        async function play()  {
+            const {canvas, play} = await terminalDisplay("./mus/jctsily.ams", {
+                fontPath: "./fonts",
+                scale: 1.0,
+                showCursor: true,
+            });
+            document.getElementById("canvas_container").appendChild(canvas);
+            await play();
+        }
+        document.getElementById("play_button").onclick = play;
     </script>
 </head>
 <body>
-    
+    <div id="canvas_container">
+        <button type="button" id="play_button">Play</button>
+    </div>
 </body>
 </html>

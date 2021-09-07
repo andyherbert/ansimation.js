@@ -10,8 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, SequenceType } from "./parser.js";
 import { TerminalDisplay } from "./terminal_display.js";
+import AnsiMusicPlayer from "./ansi_music_player.js";
 function terminalDisplayPlayer(term, sequences, terminalBlink, baud) {
     return () => __awaiter(this, void 0, void 0, function* () {
+        const music = new AnsiMusicPlayer();
         const charsPerFrame = baud / 8 / 60;
         let charCount = 0;
         for (const sequence of sequences) {
@@ -154,8 +156,10 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud) {
                     break;
                 }
                 case SequenceType.MusicalSequence: {
-                    // await musicPlayer(sequence.data, term);
+                    yield term.redraw();
+                    yield music.parse(sequence.data, term);
                     charCount = sequence.pos;
+                    yield term.redraw();
                     break;
                 }
                 default: {

@@ -1,6 +1,7 @@
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, Sequence, SequenceType } from "./parser.js";
 import { TerminalDisplay } from "./terminal_display.js";
+import AnsiMusicPlayer from "./ansi_music_player.js";
 
 function terminalDisplayPlayer(
     term: TerminalDisplay,
@@ -9,6 +10,7 @@ function terminalDisplayPlayer(
     baud: number,
 ): () => Promise<void> {
     return async () => {
+        const music = new AnsiMusicPlayer();
         const charsPerFrame = baud / 8 / 60;
         let charCount = 0;
         for (const sequence of sequences) {
@@ -146,8 +148,10 @@ function terminalDisplayPlayer(
                     break;
                 }
                 case SequenceType.MusicalSequence: {
-                    // await musicPlayer(sequence.data, term);
+                    await term.redraw();
+                    await music.parse(sequence.data, term);
                     charCount = sequence.pos;
+                    await term.redraw();
                     break;
                 }
                 default: {
