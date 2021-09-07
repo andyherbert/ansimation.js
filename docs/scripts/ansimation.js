@@ -114,8 +114,37 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                 }
                 case SequenceType.EraseDisplay: {
                     const code = sequence.data[0] == null ? 0 : sequence.data[0];
-                    if (code == 2) {
-                        yield term.clearScreen(cursor);
+                    switch (code) {
+                        case 0: {
+                            term.clearToEndOfDisplay();
+                            break;
+                        }
+                        case 1: {
+                            term.clearToStartOfDisplay();
+                            break;
+                        }
+                        case 2: {
+                            yield term.clearScreen(cursor);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case SequenceType.EraseInLine: {
+                    const code = sequence.data[0] == null ? 0 : sequence.data[0];
+                    switch (code) {
+                        case 0: {
+                            term.clearToEndOfLine();
+                            break;
+                        }
+                        case 1: {
+                            term.clearToStartOfLine();
+                            break;
+                        }
+                        case 2: {
+                            term.clearLine();
+                            break;
+                        }
                     }
                     break;
                 }

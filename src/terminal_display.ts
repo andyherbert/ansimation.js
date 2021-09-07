@@ -92,7 +92,50 @@ export class TerminalDisplay {
                 this.clearAt(column, row);
             }
         }
+        this.moveCursorTo(0, 0);
         await this.redraw(cursor);
+    }
+
+    clearToEndOfLine() {
+        if (this.cursor.row < this.rows) {
+            for (let column = this.cursor.column; column < this.columns; column++) {
+                this.clearAt(column, this.cursor.row);
+            }
+        }
+    }
+
+    clearToStartOfLine() {
+        if (this.cursor.row < this.rows) {
+            for (let column = 0; column <= this.cursor.column; column++) {
+                this.clearAt(column, this.cursor.row);
+            }
+        }
+    }
+
+    clearLine() {
+        if (this.cursor.row < this.rows) {
+            for (let column = 0; column < this.columns; column++) {
+                this.clearAt(column, this.cursor.row);
+            }
+        }
+    }
+
+    clearToEndOfDisplay() {
+        this.clearToEndOfLine();
+        for (let row = this.cursor.row + 1; row < this.rows; row++) {
+            for (let column = 0; column < this.columns; column++) {
+                this.clearAt(column, row);
+            }
+        }
+    }
+
+    clearToStartOfDisplay() {
+        this.clearToStartOfLine();
+        for (let row = 0; row < this.cursor.row; row++) {
+            for (let column = 0; column < this.columns; column++) {
+                this.clearAt(column, row);
+            }
+        }
     }
 
     clearAt(column: number, row: number) {
