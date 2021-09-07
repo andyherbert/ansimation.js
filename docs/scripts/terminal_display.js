@@ -17,8 +17,8 @@ var BlinkState;
 export class TerminalDisplay {
     constructor(columns, rows) {
         this.blinkState = BlinkState.Off;
-        this.cursorX = 0;
-        this.cursorY = 0;
+        this.cursorCol = 0;
+        this.cursorRow = 0;
         this.columns = columns;
         this.rows = rows;
     }
@@ -33,7 +33,7 @@ export class TerminalDisplay {
                 case BlinkState.Off: {
                     this.buffer.drawImage(this.blinkOff.canvas, 0, 0);
                     if (cursor) {
-                        this.font.cursorAt(this.buffer, this.cursorX * this.font.width, this.cursorY * this.font.height);
+                        this.font.cursorAt(this.buffer, this.cursorCol, this.cursorRow);
                     }
                     break;
                 }
@@ -82,69 +82,68 @@ export class TerminalDisplay {
         });
     }
     clearAt(column, row) {
-        const x = column * this.font.width;
-        const y = row * this.font.height;
-        this.font.clearAt(this.blinkOn, x, y);
-        this.font.clearAt(this.blinkOff, x, y);
+        this.font.clearAt(this.blinkOn, column, row);
+        this.font.clearAt(this.blinkOff, column, row);
     }
     drawCode(code, fg, bg, blink, wrap) {
-        if (this.cursorY == this.rows) {
+        if (this.cursorRow == this.rows) {
             this.lineFeed(wrap);
         }
-        const x = this.cursorX * this.font.width;
-        const y = this.cursorY * this.font.height;
         if (blink) {
-            this.font.backgroundAt(this.blinkOn, x, y, bg);
+            this.font.backgroundAt(this.blinkOn, this.cursorCol, this.cursorRow, bg);
         }
         else {
-            this.font.drawCodeAt(this.blinkOn, code, x, y, fg, bg);
+            this.font.drawCodeAt(this.blinkOn, code, this.cursorCol, this.cursorRow, fg, bg);
         }
-        this.font.drawCodeAt(this.blinkOff, code, x, y, fg, bg);
+        this.font.drawCodeAt(this.blinkOff, code, this.cursorCol, this.cursorRow, fg, bg);
         this.advanceCursor();
     }
     moveCursorTo(column, row) {
-        this.cursorX = Math.min(Math.max(0, column), this.columns - 1);
-        this.cursorY = Math.min(Math.max(0, row), this.rows - 1);
+        this.cursorCol = Math.min(Math.max(0, column), this.columns - 1);
+        this.cursorRow = Math.min(Math.max(0, row), this.rows - 1);
     }
     cursorUp(count) {
         for (let i = 0; i < count; i++) {
-            if (this.cursorY == 0) {
+            if (this.cursorRow == 0) {
                 break;
             }
-            this.cursorY -= 1;
+            this.cursorRow -= 1;
         }
     }
     cursorDown(count) {
         for (let i = 0; i < count; i++) {
-            if (this.cursorY == this.rows - 1) {
+            if (this.cursorRow == this.rows - 1) {
                 break;
             }
-            this.cursorY += 1;
+            this.cursorRow += 1;
         }
     }
     cursorForward(count) {
         for (let i = 0; i < count; i++) {
-            if (this.cursorX == this.columns - 1) {
+            if (this.cursorCol == this.columns - 1) {
                 break;
             }
-            this.cursorX += 1;
+            this.cursorCol += 1;
         }
     }
     cursorBack(count) {
         for (let i = 0; i < count; i++) {
-            if (this.cursorX == 0) {
+            if (this.cursorCol == 0) {
                 break;
             }
-            this.cursorX -= 1;
+            this.cursorCol -= 1;
         }
     }
+    tab() {
+        this.cursorForward(8);
+    }
     carriageReturn() {
-        this.cursorX = 0;
+        this.cursorCol = 0;
     }
     lineFeed(wrap) {
-        if (this.cursorY == this.rows) {
+        if (this.cursorRow == this.rows) {
             if (wrap) {
-                this.cursorY = 0;
+                this.cursorRow = 0;
             }
             else {
                 const sy = this.font.height;
@@ -156,20 +155,20 @@ export class TerminalDisplay {
                 for (let x = 0; x < this.columns - 1; x++) {
                     this.clearAt(x, this.rows - 1);
                 }
-                this.cursorY -= 1;
+                this.cursorRow -= 1;
             }
         }
         else {
-            this.cursorY += 1;
+            this.cursorRow += 1;
         }
     }
     advanceCursor() {
-        if (this.cursorX == this.columns - 1) {
-            this.cursorX = 0;
-            this.cursorY += 1;
+        if (this.cursorCol == this.columns - 1) {
+            this.cursorCol = 0;
+            this.cursorRow += 1;
         }
         else {
-            this.cursorX += 1;
+            this.cursorCol += 1;
         }
     }
 }

@@ -26,6 +26,10 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                 case SequenceType.Literal: {
                     for (const code of sequence.data) {
                         switch (code) {
+                            case 9: {
+                                term.tab();
+                                break;
+                            }
                             case 13: {
                                 term.carriageReturn();
                                 break;
@@ -75,8 +79,8 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, cursor) {
                     break;
                 }
                 case SequenceType.SavePosition: {
-                    savedCursorPositionX = term.cursorX;
-                    savedCursorPositionY = term.cursorY;
+                    savedCursorPositionX = term.cursorCol;
+                    savedCursorPositionY = term.cursorRow;
                     break;
                 }
                 case SequenceType.RestorePosition: {

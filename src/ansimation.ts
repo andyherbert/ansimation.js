@@ -1,6 +1,5 @@
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, Sequence, SequenceType } from "./parser.js";
-import { ansiPalette } from "./palette.js";
 import { TerminalDisplay } from "./terminal_display.js";
 
 function terminalDisplayPlayer(
@@ -25,6 +24,10 @@ function terminalDisplayPlayer(
                 case SequenceType.Literal: {
                     for (const code of sequence.data) {
                         switch (code) {
+                            case 9: {
+                                term.tab();
+                                break;
+                            }
                             case 13: {
                                 term.carriageReturn();
                                 break;
@@ -81,8 +84,8 @@ function terminalDisplayPlayer(
                     break;
                 }
                 case SequenceType.SavePosition: {
-                    savedCursorPositionX = term.cursorX;
-                    savedCursorPositionY = term.cursorY;
+                    savedCursorPositionX = term.cursorCol;
+                    savedCursorPositionY = term.cursorRow;
                     break;
                 }
                 case SequenceType.RestorePosition: {

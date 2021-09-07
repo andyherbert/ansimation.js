@@ -17,3 +17,11 @@ export function createContextWithRGB(width, height, rgb, startY = 0) {
     ctx.putImageData(imageData, 0, 0);
     return ctx;
 }
+export function sourceInCopy(source, rgb) {
+    source.fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
+    const canvas = source.canvas;
+    source.fillRect(0, 0, canvas.width, canvas.height);
+    const ctx = createContext(canvas.width, canvas.height);
+    ctx.drawImage(canvas, 0, 0);
+    return ctx;
+}

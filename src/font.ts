@@ -1,7 +1,6 @@
 import fetchBytes from "./fetch_bytes.js";
-import { createContext, createContextWithRGB } from "./context.js";
-import Rgb from "./rgb.js";
-import { black, white, brightWhite, ansiPalette } from "./palette.js";
+import { createContext, createContextWithRGB, sourceInCopy } from "./context.js";
+import { white, ansiPalette } from "./palette.js";
 
 function getFileName(fontName: string): string {
     switch (fontName) {
@@ -312,99 +311,96 @@ function getFileName(fontName: string): string {
 
 export default class Font {
     file: string;
-    width: number | null = null;
-    height: number | null = null;
-    glyphs: CanvasRenderingContext2D[] | null = null;
-    indexedGlyphs: CanvasRenderingContext2D[][] = [];
-    background: CanvasRenderingContext2D;
-    indexedBackground: CanvasRenderingContext2D[] = [];
+    bytes: Uint8Array = null;
+    width: number = null;
+    height: number = null;
+    glyphs: CanvasRenderingContext2D[] = new Array(256);
+    indexedGlyphs: CanvasRenderingContext2D[][] = new Array(16);
+    indexedBackground: CanvasRenderingContext2D[] = new Array(16);
     cursor: CanvasRenderingContext2D;
 
     constructor(name: string) {
         this.file = getFileName(name);
     }
 
-    cursorAt(ctx: CanvasRenderingContext2D, x: number, y: number) {
-        ctx.drawImage(this.cursor.canvas, x, y);
+    cursorAt(ctx: CanvasRenderingContext2D, column: number, row: number) {
+        ctx.drawImage(this.cursor.canvas, column * this.width, row * this.height);
     }
 
-    backgroundAt(ctx: CanvasRenderingContext2D, x: number, y: number, index: number) {
-        if (this.indexedBackground[index] == null)  {
-            const rgb = ansiPalette[index];
-            this.background.fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
-            this.background.fillRect(0, 0, this.width, this.height);
-            this.indexedBackground[index] = createContext(this.width, this.height);
-            this.indexedBackground[index].drawImage(this.background.canvas, 0, 0);
+    backgroundAt(ctx: CanvasRenderingContext2D, column: number, row: number, index: number) {
+        if (this.indexedBackground[index] == null) {
+            this.indexedBackground[index] = createContextWithRGB(
+                this.width,
+                this.height,
+                ansiPalette[index],
+            );
         }
-        ctx.drawImage(this.indexedBackground[index].canvas, x, y);
+        ctx.drawImage(this.indexedBackground[index].canvas, column * this.width, row * this.height);
     }
 
-    clearAt(ctx: CanvasRenderingContext2D, x: number, y: number) {
-        this.backgroundAt(ctx, x, y, 0);
+    clearAt(ctx: CanvasRenderingContext2D, column: number, row: number) {
+        this.backgroundAt(ctx, column, row, 0);
     }
 
     drawCodeAt(
         ctx: CanvasRenderingContext2D,
         code: number,
-        x: number,
-        y: number,
+        column: number,
+        row: number,
         fg: number,
         bg: number,
-        ) {
-        this.backgroundAt(ctx, x, y, bg);
-        if (this.indexedGlyphs[fg] == null) {
-            this.indexedGlyphs[fg] = [];
+    ) {
+        this.backgroundAt(ctx, column, row, bg);
+        if (this.indexedGlyphs?.[fg]?.[code] == null) {
+            if (this.indexedGlyphs[fg] == null) {
+                this.indexedGlyphs[fg] = new Array(256);
+            }
+            if (this.glyphs[code] == null) {
+                this.glyphs[code] = this.renderGlyph(code);
+            }
+            this.indexedGlyphs[fg][code] = sourceInCopy(this.glyphs[code], ansiPalette[fg]);
         }
-        if (this.indexedGlyphs[fg][code] == null) {
-            const rgb = ansiPalette[fg];
-            this.glyphs[code].fillStyle = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
-            this.glyphs[code].fillRect(0, 0, this.width, this.height);
-            this.indexedGlyphs[fg][code] = createContext(this.width, this.height);
-            this.indexedGlyphs[fg][code].drawImage(this.glyphs[code].canvas, 0, 0);
+        ctx.drawImage(this.indexedGlyphs[fg][code].canvas, column * this.width, row * this.height);
+    }
+
+    renderGlyph(code: number): CanvasRenderingContext2D {
+        const ctx = createContext(this.width, this.height);
+        const imageData = ctx.createImageData(this.width, this.height);
+        let imageDataPos = 0;
+        let bytePos = code * this.height;
+        for (let y = 0; y < this.height; y++) {
+            const byte = this.bytes[bytePos++];
+            for (let x = 7; x >= 0; x--) {
+                const bit = (byte >> x) & 1;
+                if (bit == 1) {
+                    imageData.data[imageDataPos++] = 255;
+                    imageData.data[imageDataPos++] = 255;
+                    imageData.data[imageDataPos++] = 255;
+                    imageData.data[imageDataPos++] = 255;
+                } else {
+                    imageData.data[imageDataPos++] = 0;
+                    imageData.data[imageDataPos++] = 0;
+                    imageData.data[imageDataPos++] = 0;
+                    imageData.data[imageDataPos++] = 0;
+                }
+            }
         }
-        ctx.drawImage(this.indexedGlyphs[fg][code].canvas, x, y);
+        ctx.putImageData(imageData, 0, 0);
+        ctx.globalCompositeOperation = "source-in";
+        return ctx;
     }
 
     async fetch(fontPath: string) {
-        const bytes = await fetchBytes(`${fontPath}/${this.file}`);
-        if (bytes.length % 256 != 0) {
+        this.bytes = await fetchBytes(`${fontPath}/${this.file}`);
+        if (this.bytes.length % 256 != 0) {
             throw `invalid font file ${this.file}`;
         }
         this.width = 8;
-        this.height = bytes.length / 256;
+        this.height = this.bytes.length / 256;
         if (this.height < 8 || this.height > 32) {
             throw `invalid font file ${this.file}`;
         }
-        this.background = createContextWithRGB(this.width, this.height, brightWhite);
-        this.background.globalCompositeOperation = "source-in";
         this.cursor = createContextWithRGB(this.width, this.height, white, this.height - 2);
         this.cursor.globalCompositeOperation = "difference";
-        this.glyphs = [];
-        for (let code = 0; code < 256; code++) {
-            const ctx = createContext(this.width, this.height);
-            ctx.globalCompositeOperation = "source-in";
-            const imageData = ctx.createImageData(this.width, this.height);
-            let imageDataPos = 0;
-            let bytePos = code * this.height;
-            for (let y = 0; y < this.height; y++) {
-                const byte = bytes[bytePos++];
-                for (let x = 7; x >= 0; x--) {
-                    const bit = (byte >> x) & 1;
-                    if (bit == 1) {
-                        imageData.data[imageDataPos++] = 255;
-                        imageData.data[imageDataPos++] = 255;
-                        imageData.data[imageDataPos++] = 255;
-                        imageData.data[imageDataPos++] = 255;
-                    } else {
-                        imageData.data[imageDataPos++] = 0;
-                        imageData.data[imageDataPos++] = 0;
-                        imageData.data[imageDataPos++] = 0;
-                        imageData.data[imageDataPos++] = 0;
-                    }
-                }
-            }
-            ctx.putImageData(imageData, 0, 0);
-            this.glyphs.push(ctx);
-        }
     }
 }
