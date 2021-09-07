@@ -229,4 +229,13 @@ export class TerminalDisplay {
             this.savedCursor = null;
         }
     }
+    pause(ms) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let frames = Math.ceil(ms / (1000 / 60));
+            while (frames > 0) {
+                yield this.redraw();
+                frames -= 1;
+            }
+        });
+    }
 }

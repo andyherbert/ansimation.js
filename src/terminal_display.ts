@@ -264,4 +264,12 @@ export class TerminalDisplay {
             this.savedCursor = null;
         }
     }
+
+    async pause(ms: number) {
+        let frames = Math.ceil(ms / (1000 / 60));
+        while (frames > 0) {
+            await this.redraw();
+            frames -= 1;
+        }
+    }
 }

@@ -1,16 +1,17 @@
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, Sequence, SequenceType } from "./parser.js";
 import { TerminalDisplay } from "./terminal_display.js";
-import AnsiMusicPlayer from "./ansi_music_player.js";
+import { AnsiMusicPlayer, Beeper } from "./ansi_music_player.js";
 
 function terminalDisplayPlayer(
     term: TerminalDisplay,
     sequences: Sequence[],
     terminalBlink: boolean,
     baud: number,
+    beeper: Beeper,
 ): () => Promise<void> {
     return async () => {
-        const music = new AnsiMusicPlayer();
+        const music = new AnsiMusicPlayer(beeper);
         const charsPerFrame = baud / 8 / 60;
         let charCount = 0;
         for (const sequence of sequences) {
@@ -173,14 +174,20 @@ export async function terminalDisplay(
         fontName = "IBM VGA",
         fontPath = "./",
         showCursor = true,
-    }: { scale?: number; fontName?: string; fontPath?: string; showCursor?: boolean } = {},
+    }: {
+        scale?: number;
+        fontName?: string;
+        fontPath?: string;
+        showCursor?: boolean;
+    } = {},
 ): Promise<any> {
-    const term: TerminalDisplay = new TerminalDisplay(80, 25, false, showCursor);
+    const beeper = new Beeper();
+    const term = new TerminalDisplay(80, 25, false, showCursor);
     const canvas = await term.fetchFont(fontName, fontPath, scale);
     const bytes = await fetchBytes(url);
     const sequences = parseSequences(bytes);
     return {
         canvas,
-        play: terminalDisplayPlayer(term, sequences, true, 14000),
+        play: terminalDisplayPlayer(term, sequences, true, 9600, beeper),
     };
 }

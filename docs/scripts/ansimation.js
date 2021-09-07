@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, SequenceType } from "./parser.js";
 import { TerminalDisplay } from "./terminal_display.js";
-import AnsiMusicPlayer from "./ansi_music_player.js";
-function terminalDisplayPlayer(term, sequences, terminalBlink, baud) {
+import { AnsiMusicPlayer, Beeper } from "./ansi_music_player.js";
+function terminalDisplayPlayer(term, sequences, terminalBlink, baud, beeper) {
     return () => __awaiter(this, void 0, void 0, function* () {
-        const music = new AnsiMusicPlayer();
+        const music = new AnsiMusicPlayer(beeper);
         const charsPerFrame = baud / 8 / 60;
         let charCount = 0;
         for (const sequence of sequences) {
@@ -175,13 +175,14 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud) {
 }
 export function terminalDisplay(url, { scale = 1.0, fontName = "IBM VGA", fontPath = "./", showCursor = true, } = {}) {
     return __awaiter(this, void 0, void 0, function* () {
+        const beeper = new Beeper();
         const term = new TerminalDisplay(80, 25, false, showCursor);
         const canvas = yield term.fetchFont(fontName, fontPath, scale);
         const bytes = yield fetchBytes(url);
         const sequences = parseSequences(bytes);
         return {
             canvas,
-            play: terminalDisplayPlayer(term, sequences, true, 14000),
+            play: terminalDisplayPlayer(term, sequences, true, 9600, beeper),
         };
     });
 }

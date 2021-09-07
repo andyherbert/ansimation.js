@@ -64,7 +64,7 @@ function getFrequency(octave, note, sharp, flat) {
     }
     return freqs[index];
 }
-class Beeper {
+export class Beeper {
     constructor() {
         this.ctx = new AudioContext();
         this.operation = Operation.Foreground;
@@ -80,7 +80,14 @@ class Beeper {
         this.oscillator.start();
         this.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
     }
-    playFreq(freq, length, dots) {
+    resumeIfSuspended() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.ctx.state == "suspended") {
+                yield this.ctx.resume();
+            }
+        });
+    }
+    playFreq(freq, length, dots, term) {
         return __awaiter(this, void 0, void 0, function* () {
             const fullNote = (((60 * 1000) / this.tempo) * 4) / length;
             let noteLength = fullNote;
@@ -110,7 +117,7 @@ class Beeper {
                 countDots -= 1;
             }
             this.gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
-            yield new Promise((resolve) => setTimeout(resolve, noteLength + extra));
+            yield term.pause(noteLength + extra);
             this.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
             const pauseLength = fullNote - noteLength;
             if (pauseLength > 0) {
@@ -118,16 +125,16 @@ class Beeper {
             }
         });
     }
-    playKey(key, sharp, flat, length, dots) {
+    playKey(key, sharp, flat, length, dots, term) {
         return __awaiter(this, void 0, void 0, function* () {
             const freq = getFrequency(this.octave, key, sharp, flat);
-            yield this.playFreq(freq, length, dots);
+            yield this.playFreq(freq, length, dots, term);
         });
     }
-    pause(quarternotes) {
+    pause(quarternotes, term) {
         return __awaiter(this, void 0, void 0, function* () {
             const ms = (((60 * 1000) / this.tempo) * 4) / quarternotes;
-            yield new Promise((resolve) => setTimeout(resolve, ms));
+            yield term.pause(ms);
         });
     }
 }
@@ -172,12 +179,13 @@ function parseDots(bytes, start, term) {
     }
     return count;
 }
-export default class AnsiMusicPlayer {
-    constructor() {
-        this.beeper = new Beeper();
+export class AnsiMusicPlayer {
+    constructor(beeper) {
+        this.beeper = beeper;
     }
     parse(bytes, term) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.beeper.resumeIfSuspended();
             for (let pos = 0; pos < bytes.length; pos++) {
                 const byte = bytes[pos];
                 term.drawCode(byte);
@@ -191,18 +199,21 @@ export default class AnsiMusicPlayer {
                             // '#'
                             sharp = true;
                             pos += 1;
+                            term.drawCode(byte);
                             break;
                         }
                         case 0x2b: {
                             // '+'
                             sharp = true;
                             pos += 1;
+                            term.drawCode(byte);
                             break;
                         }
                         case 0x2d: {
                             // '-'
                             flat = true;
                             pos += 1;
+                            term.drawCode(byte);
                             break;
                         }
                     }
@@ -215,7 +226,7 @@ export default class AnsiMusicPlayer {
                     const dots = parseDots(bytes, pos + 1, term);
                     pos += dots;
                     yield term.redraw();
-                    yield this.beeper.playKey(note, sharp, flat, length, dots);
+                    yield this.beeper.playKey(note, sharp, flat, length, dots, term);
                 }
                 else {
                     switch (byte) {
@@ -247,7 +258,7 @@ export default class AnsiMusicPlayer {
                             pos += stringInt.length;
                             const note = Number.parseInt(stringInt);
                             if (note >= 0 && note <= 84) {
-                                this.beeper.playFreq(freqs[note], this.beeper.length, 0);
+                                this.beeper.playFreq(freqs[note], this.beeper.length, 0, term);
                             }
                             break;
                         }
@@ -269,7 +280,7 @@ export default class AnsiMusicPlayer {
                             const dots = parseDots(bytes, pos + 1, term);
                             pos += dots;
                             if (pause >= 1 && pause <= 64) {
-                                yield this.beeper.pause(pause);
+                                yield this.beeper.pause(pause, term);
                             }
                             break;
                         }
