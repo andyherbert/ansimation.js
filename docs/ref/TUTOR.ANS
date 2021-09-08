@@ -1,0 +1,173 @@
+[40m[2J[2H[0;1;33;40mA[0;31mN[32mS[1;36mI [34mP[31mL[s
+[u[32mA[0;35mY [1;36mis a very powerful utility which allo[s
+[uws you to put music[3Hand sounds into your ANSI files.  Be[s
+[ufore continuing, you should first[4Hread the manual (ANSIP[s
+[uLAY.DOC) to become familiar with music strings,[5Hmusic co[s
+[udes, and sound codes.
+[6H[7H[0;31mAt any time you may pre[s
+[uss [ESC] to exit, or [ENTER] to continue...[MF ;;;900000[8H[9H[1;33mHere [s
+[uare a few demonstrations:[10H[32mBy using the music codes[s
+[u, you can play a music string as long as[11Hyou want.  Car[s
+[uraige returns are ignored.  Here are the music strings[12H[s
+[uused with the file SEA.ANS.  We'll go into more detail shor[s
+[utly...[MF ;;;900000[13H[14H[37mESC[MF T200 L8 O4 C < B > C F4 C < G#4[s
+[u A > C 4 < F MS GGG MN G4 A#  [D[15HESC[MF 892.32;1;8;;-[s
+[u19.04 [D  ESC[MF O3 L2 F P2 [D[MF T200 L8 O4 C < B > C F4 C < G#4
+A > C 4 < F MS GGG MN G4 A#  [MF 892.32;1;8;;-19.04   [MF O3 L2 F
+ P2[MF ;;;900000[16H[17H[31mThere are [s
+[uactually 3 music strings here.  The first and third strings
+[18Hare music codes; the middle string consists of sound code[s
+[us.  Each [19Hstring is preceded with the [0;31mESCape CHARA[s
+[uCTER [1mfollowed by [0;31m[MF [1mor [0;31m[MB[1m,[20H[s
+[uand suffixed with the [0;31mMUSIC NOTE CHARACTER [1mCHR$([s
+[u14).[MF ;;;900000[21H[22H[34mThe first string contains the majority o[s
+[uf the song.  At the end of the song,[23Hthe musical scale [s
+[uis decreased gradually from A# to F of the next lowest[24H[s
+[uoctave.  To do this, we could spend lots of time figuring o[s
+[uut which notes,[25Hduration and octaves to use, OR... we c[A
+[39Could use one simple SOUND CODE:[MF ;;;900000
+[0m[255D[40m
+[39m[0;1;40mESC[MF   [0;36mPlay sound codes in Music Foregr
+[A[41Cound.[28C[31mprefix[1;37m892.32   [0;36mBegin with
+[A[19C the frequency which is equivalent to the note A#.[7C
+[A[76C[31mFREQ[1;37m;1[7C[0;36mPlay frequency for a dura
+[A[34Ction of [1;37m1 [0;36mclock tick.[21C[31mDURA
+[A[1;37m;8[7C[0;36mRepeat playing the frequency [1;37m8 
+[A[40C[0;36mtimes (8 cycles).[17C[31mCYCLES[1;37m;[8CNo
+[A[11C [0;36mdelay between cycles.[42C[31mDELAY[1;37m;-1
+[A[3C9.04  [0;36mEach time the frequency is cycled, [1;37m
+[A[44Csubtract 19.04 [0;36mfrom it's value. [31mVARY
+[A[1;37m [D[8C[0;36mEnd of music string.[45C[31msuffix
+[1;32m[MF ;;;900000If we could visually see the changes taking place, it m
+[A[55Cight look like this:
+
+[12C[35mCycle[6CFrequency[6CDuration    Delay
+[14C[33m0[10C892.32[10C1[10C0    A# equivalent
+[14C[0;32m1[10C873.28[10C1[10C0
+[14C[33m2[10C854.24[10C1[10C0
+[14C[37m3[10C835.20[10C1[10C0
+[14C[1;33m4[10C816.16[10C1[10C0
+[14C[31m5[10C797.12[10C1[10C0
+[14C[0;31m6[10C778.08[10C1[10C0
+[14C[1;32m7[10C759.04[10C1[10C0
+[14C[34m8[10C740.00[10C1[10C0
+
+[31m[MF ;;;900000Variation factor of [37m-19.04 [31mis calculated by:
+[10CBeginning Frequency:  [33m892.32   (A# equivalent)
+[5C[31mDesired Ending Frequency:  [34m739.98   (F# equivale[A
+[53Cnt - next lower octave)[0m[255D[5C[0;1;31;40mDesired ending [0;31mFREQUENCY[1m:  [34m739
+[A[35C.98 [31m-
+[32C------
+[19CDifference:  [0;32m152.34
+[10C[1;31mDivided by 8 [0;31mCYCLES[1m:    [0;33m8.00 
+[A[39C[1;31m�
+[32C------
+[13C[0;31mVARIATION [1mfactor:   [36m19.04 subtotal [31m.
+[A[49C..then give it a negative
+value so the frequency will decrease (instead of increase)... 
+[A[62C [37m=  -19.04
+
+[32mNow lets take another look at the music strings:
+
+[MF ;;;900000[0;31mESC[MF [1;37mT200 L8 O4 [0;32mC [1;37m< [0;32mB
+[A[24C[1;37m> [0;32mC F[1;37m4 [0;32mC [1;37m< [0;32mG
+[A[36C#[1;37m4 [0;32mA [1;37m> [0;32mC[1;37m4 < [0;32m
+[A[48CF [1;37mMS [0;32mGGG [1;37mMN [0;32mG[1;37m4 
+[A[63C[0;32mA[1;37m# [0;31m [D
+ESC[MF [32m892.32[1;37m;[0;32m1[1;37m;[0;32m8[1;37m;;
+[A[19C[0;32m-19.04[31m [D   ESC[MF [1;37mO3 L2 [0;32mF
+[A[43C [1;37mP2 [0;31m [D[MF T200 L8 O4 C < B > C F4 C < G#4
+A > C 4 < F MS GGG MN G4 A#  [MF 892.32;1;8;;-19.04   [MF O3 L2 F
+ P2[MF ;;;900000
+
+[1;32mTo decrease at a [1;34mslower [1;32mpace, you could increase the nu
+[A[55Cmber of [0;31mCYCLES[1;32m, and
+adjust the [0;31mVARIATION [1;32mrate accordingly.
+
+To decrease at at [1;34mfaster [1;32mpace, you could decrease the number o
+[A[62Cf [0;31mCYCLES[1;32m, and
+adjust the [0;31mVARIATION [1;32mrate accordingly.
+
+[36m[MF ;;;900000Now that we've looked at how SOUND CODES can be used with
+[A[57C music, let's look
+at some other ways they can be used...
+
+[35m[MF ;;;900000In your ANSI file, it is possible to put a "pause" in you
+[A[57Cr files by adding
+MANY MANY Escape sequences of [37mESC[sESC[sESC[sESC[sESC[s..
+[A[57C.etc...
+[35mThis can make the size of your ANSI file very L-A-R-G-E. [A
+[57C But with[0m[255D[40m
+[39m[0;1;33;40mA[0;31mN[32mS[1;36mI [34mP[31mL[32mA
+[A[8C[0;35mY[1m, it's simple!  Just insert a SOUND CODE so
+[A[52Cmething like...
+[0;31mESC[MF [1;37m;;;[0;32m25000[31m [D[1;35m.   This 
+[A[25Csets the [0;31mDELAY [1;35mfor a count of [0;32m25,
+[A[58C000 [1;35m(or
+whatever other value you want).
+
+[5C[0;35m[MF ;;;900000Note that the [1;37m;;; [0;35m(semicolons) are st
+[A[42Cill used.  This is
+[5Cto separate the parameters.  Parameters [31mFREQUENCY 
+[A[55C[35m(1)[1;37m;
+[5C[0;31mDURATION [35m(2)[1;37m; [0;35mand [31mCYCLES 
+[A[30C[35m(3) are left empty.  Parameter
+[5C[31mDELAY [35m(3) is set to a value of [32m25,000[35m.
+[A[43C  [1;36m[MF ;;;900000The last parameter,
+[5C[0;31mVARIATION [1;36m(5) is also empty, but no semicolo
+[A[49Cns are needed since
+[5Cit comes [35mAFTER [36mthe last parameter which has valu
+[A[53Ce -- kind
+[5Cof like leaving off the 00000's in a number 29.973100000
+[MF ;;;900000
+[35mIf you want a pause which requires keyboard input, you ca
+[A[57Cn set the
+value for [0;31mDELAY [1;35mextremely high.  Regardless of t
+[A[48Che value used, if
+[ENTER] is hit, the pause will be released.
+
+[34m[MF ;;;900000Another way that SOUND CODES can be used is by putting tw
+[A[57Co or more
+SOUND CODES together, for example...
+
+[5CHere's a bird call using 2 music strings together:
+[10C[0;31mESC[MF [32m1397[1;37m;[0;32m4[1;37m;[0;32m2
+[A[25C[1;37m;[0;32m250[31m [D ESC[MF [32m2600[1;37m;
+[A[44C[0;32m1.2[1;37m;[0;32m4[1;37m;;[0;32m150[31m
+[A[54C [D[MF 1397;4;2;250 [MF 2600;1.2;4;;150[MF ;;;900000
+
+[5C[0;1;34;40mHere's the sound of a steam ship:
+[10C[0;31mESC[MF [32m57[1;37m;[0;32m15[31m [D  ESC[MF[C[32m37[1;37m;[0;32m25[31m [D[0m
+[MF 57;15[MF 37;25[MF ;;;900000[40m
+[39m[5C[0;1;34;40mGetting zapped by martians:
+[10C[0;31mESC[MF [32m7000[1;37m;[0;32m.12[1;37m;[0;32m2
+[A[27C00[1;37m;[0;32m25[1;37m;[0;32m-100[31m [D[MF
+7000;.12;200;25;-100[MF ;;;900000[0m
+
+[0;31;40mOne more sound effect to mention...
+[1mIn place of the [0;31mVARIATION [1mvariable, you can use
+[A[47C a " [37m*  (star) [31m" character.
+This will vari the frequency at random...For example:[MF ;;;900000
+
+[0;31mESC[MF [32m100[37m;[32m2[37m;[32m10[37m;[32m5
+[A[17C[37m;[32m*[31m [D[MF 100;2;10;5;*[MF ;;;900000[0m
+
+[0;1;33;40mThe easiest way to work with your music string to
+[A[50Cget it JUST right
+is to use the PLAY.EXE program with the /E (editor) option.  T
+[A[62Che user's
+manual (ANSIPLAY.DOC) gives more details on how to work the ed
+[A[62Citor,
+then save your music string to file.[MF ;;;900000
+
+[34mOnce your ANSI files are created, you can turn them into 
+[A[57Ca slide show
+with the ANSIAUTO.EXE program.  Since the manual also covers d
+[A[62Cetails
+on ANSIAUTO, rather than explaining it, we'll finish the tutor
+[A[62Cial
+by running ANSIAUTO.
+
+Here are a few demo programs.  You can exit ANSIAUTO by hitting
+the [ESC] key.  ANSIAUTO will exit after the current display
+is completed.  Strike any key when you're ready...[MF ;;;900000[0m
