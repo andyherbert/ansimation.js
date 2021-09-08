@@ -27,7 +27,7 @@
         import { terminalDisplay } from "./scripts/ansimation.js";
         async function play()  {
             const name = document.getElementById("music").value;
-            const {canvas, play} = await terminalDisplay(`./ref/TUTOR.ANS`, {
+            const {canvas, play} = await terminalDisplay(`./${name}`, {
                 fontPath: "./fonts",
                 scale: 1.0,
                 showCursor: true,

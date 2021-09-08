@@ -142,14 +142,13 @@ enum Articulation {
     Legato,
 }
 
-function parseInt(bytes: number[], start: number, term: TerminalDisplay): string {
+function parseInt(bytes: number[], start: number): string {
     let numberString: string = "";
     for (let pos = start; pos < bytes.length; pos++) {
         const byte = bytes[pos];
         if (byte >= 0x30 && byte <= 0x39) {
             // '0'..'9'
             numberString = numberString.concat(String.fromCharCode(byte));
-            term.drawCode(byte);
         } else {
             break;
         }
@@ -157,14 +156,13 @@ function parseInt(bytes: number[], start: number, term: TerminalDisplay): string
     return numberString;
 }
 
-function parseDots(bytes: number[], start: number, term: TerminalDisplay): number {
+function parseDots(bytes: number[], start: number): number {
     let count: number = 0;
     for (let pos = start; pos < bytes.length; pos++) {
         const byte = bytes[pos];
         if (byte == 0x2e) {
             // '.'
             count += 1;
-            term.drawCode(byte);
         } else {
             break;
         }
@@ -183,7 +181,6 @@ export class AnsiMusicPlayer {
         await this.beeper.resumeIfSuspended();
         for (let pos = 0; pos < bytes.length; pos++) {
             const byte = bytes[pos];
-            term.drawCode(byte);
             if (byte >= 0x41 && byte <= 0x47) {
                 // 'A'..'G'
                 const note = byte - 0x41;
@@ -194,51 +191,45 @@ export class AnsiMusicPlayer {
                         // '#'
                         sharp = true;
                         pos += 1;
-                        term.drawCode(byte);
                         break;
                     }
                     case 0x2b: {
                         // '+'
                         sharp = true;
                         pos += 1;
-                        term.drawCode(byte);
                         break;
                     }
                     case 0x2d: {
                         // '-'
                         flat = true;
                         pos += 1;
-                        term.drawCode(byte);
                         break;
                     }
                 }
-                const numberString = parseInt(bytes, pos + 1, term);
+                const numberString = parseInt(bytes, pos + 1);
                 pos += numberString.length;
                 let length = this.beeper.length;
                 if (numberString.length != 0) {
                     length = Number.parseInt(numberString, 10);
                 }
-                const dots = parseDots(bytes, pos + 1, term);
+                const dots = parseDots(bytes, pos + 1);
                 pos += dots;
-                await term.redraw();
                 await this.beeper.playKey(note, sharp, flat, length, dots, term);
             } else {
                 switch (byte) {
                     case 0x3c: {
                         // '<'
                         this.beeper.octave = Math.max(0, this.beeper.octave - 1);
-                        await term.redraw();
                         break;
                     }
                     case 0x3e: {
                         // '>'
                         this.beeper.octave = Math.min(this.beeper.octave + 1, 6);
-                        await term.redraw();
                         break;
                     }
                     case 0x4c: {
                         // 'L'
-                        const stringInt = parseInt(bytes, pos + 1, term);
+                        const stringInt = parseInt(bytes, pos + 1);
                         pos += stringInt.length;
                         const newLength = Number.parseInt(stringInt);
                         if (newLength >= 1 && newLength <= 64) {
@@ -248,7 +239,7 @@ export class AnsiMusicPlayer {
                     }
                     case 0x4e: {
                         // 'N'
-                        const stringInt = parseInt(bytes, pos + 1, term);
+                        const stringInt = parseInt(bytes, pos + 1);
                         pos += stringInt.length;
                         const note = Number.parseInt(stringInt);
                         if (note >= 0 && note <= 84) {
@@ -258,7 +249,7 @@ export class AnsiMusicPlayer {
                     }
                     case 0x4f: {
                         // 'O'
-                        const stringInt = parseInt(bytes, pos + 1, term);
+                        const stringInt = parseInt(bytes, pos + 1);
                         pos += stringInt.length;
                         const newOctave = Number.parseInt(stringInt);
                         if (newOctave >= 0 && newOctave <= 6) {
@@ -268,12 +259,11 @@ export class AnsiMusicPlayer {
                     }
                     case 0x50: {
                         // 'P'
-                        const stringInt = parseInt(bytes, pos + 1, term);
+                        const stringInt = parseInt(bytes, pos + 1);
                         pos += stringInt.length;
                         const pause = Number.parseInt(stringInt);
-                        const dots = parseDots(bytes, pos + 1, term);
+                        const dots = parseDots(bytes, pos + 1);
                         pos += dots;
-                        await term.redraw();
                         if (pause >= 1 && pause <= 64) {
                             await this.beeper.pause(pause, term);
                         }
@@ -281,7 +271,7 @@ export class AnsiMusicPlayer {
                     }
                     case 0x54: {
                         // 'T'
-                        const stringInt = parseInt(bytes, pos + 1, term);
+                        const stringInt = parseInt(bytes, pos + 1);
                         pos += stringInt.length;
                         const newTempo = Number.parseInt(stringInt);
                         if (newTempo >= 32 && newTempo <= 255) {
