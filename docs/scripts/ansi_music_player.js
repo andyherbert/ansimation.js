@@ -80,6 +80,9 @@ export class Beeper {
         this.oscillator.start();
         this.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
     }
+    close() {
+        this.ctx.close();
+    }
     resumeIfSuspended() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.ctx.state == "suspended") {

@@ -78,6 +78,10 @@ export class Beeper {
         this.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
     }
 
+    close() {
+        this.ctx.close();
+    }
+
     async resumeIfSuspended() {
         if (this.ctx.state == "suspended") {
             await this.ctx.resume();

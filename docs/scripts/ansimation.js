@@ -169,6 +169,7 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baudRate, beeper)
                 }
             }
         }
+        beeper.close();
         while (true) {
             yield term.redraw();
         }

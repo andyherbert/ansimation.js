@@ -162,6 +162,7 @@ function terminalDisplayPlayer(
                 }
             }
         }
+        beeper.close();
         while (true) {
             await term.redraw();
         }
