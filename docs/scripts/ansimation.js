@@ -11,10 +11,10 @@ import fetchBytes from "./fetch_bytes.js";
 import { parseSequences, SequenceType } from "./parser.js";
 import { TerminalDisplay } from "./terminal_display.js";
 import { AnsiMusicPlayer, Beeper } from "./ansi_music_player.js";
-function terminalDisplayPlayer(term, sequences, terminalBlink, baud, beeper) {
+function terminalDisplayPlayer(term, sequences, terminalBlink, baudRate, beeper) {
     return () => __awaiter(this, void 0, void 0, function* () {
         const music = new AnsiMusicPlayer(beeper);
-        const charsPerFrame = baud / 8 / 60;
+        const charsPerFrame = baudRate / 8 / 60;
         let charCount = 0;
         for (const sequence of sequences) {
             switch (sequence.type) {
@@ -30,7 +30,7 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, beeper) {
                                 break;
                             }
                             case 10: {
-                                term.lineFeed();
+                                yield term.lineFeed();
                                 break;
                             }
                             default: {
@@ -173,7 +173,7 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baud, beeper) {
         }
     });
 }
-export function terminalDisplay(url, { scale = 1.0, fontName = "IBM VGA", fontPath = "./", showCursor = true, } = {}) {
+export function terminalDisplay(url, { scale = 1.0, fontName = "IBM VGA", fontPath = "./", showCursor = true, baudRate = 14400, } = {}) {
     return __awaiter(this, void 0, void 0, function* () {
         const beeper = new Beeper();
         const term = new TerminalDisplay(80, 25, false, showCursor);
@@ -182,7 +182,7 @@ export function terminalDisplay(url, { scale = 1.0, fontName = "IBM VGA", fontPa
         const sequences = parseSequences(bytes);
         return {
             canvas,
-            play: terminalDisplayPlayer(term, sequences, true, 9600, beeper),
+            play: terminalDisplayPlayer(term, sequences, true, baudRate, beeper),
         };
     });
 }

@@ -7,12 +7,12 @@ function terminalDisplayPlayer(
     term: TerminalDisplay,
     sequences: Sequence[],
     terminalBlink: boolean,
-    baud: number,
+    baudRate: number,
     beeper: Beeper,
 ): () => Promise<void> {
     return async () => {
         const music = new AnsiMusicPlayer(beeper);
-        const charsPerFrame = baud / 8 / 60;
+        const charsPerFrame = baudRate / 8 / 60;
         let charCount = 0;
         for (const sequence of sequences) {
             switch (sequence.type) {
@@ -174,11 +174,13 @@ export async function terminalDisplay(
         fontName = "IBM VGA",
         fontPath = "./",
         showCursor = true,
+        baudRate = 14400,
     }: {
         scale?: number;
         fontName?: string;
         fontPath?: string;
         showCursor?: boolean;
+        baudRate?: number;
     } = {},
 ): Promise<any> {
     const beeper = new Beeper();
@@ -188,6 +190,6 @@ export async function terminalDisplay(
     const sequences = parseSequences(bytes);
     return {
         canvas,
-        play: terminalDisplayPlayer(term, sequences, true, 9600, beeper),
+        play: terminalDisplayPlayer(term, sequences, true, baudRate, beeper),
     };
 }
