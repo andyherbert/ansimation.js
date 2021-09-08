@@ -28,7 +28,7 @@ function terminalDisplayPlayer(
                                 break;
                             }
                             case 10: {
-                                term.lineFeed();
+                                await term.lineFeed();
                                 break;
                             }
                             default: {

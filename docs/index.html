@@ -27,10 +27,11 @@
         import { terminalDisplay } from "./scripts/ansimation.js";
         async function play()  {
             const name = document.getElementById("music").value;
-            const {canvas, play} = await terminalDisplay(`./${name}`, {
+            const {canvas, play} = await terminalDisplay(`./ref/TUTOR.ANS`, {
                 fontPath: "./fonts",
                 scale: 1.0,
                 showCursor: true,
+                baudRate: 28800,
             });
             const container = document.getElementById("canvas_container");
             container.insertBefore(canvas, container.firstChild);

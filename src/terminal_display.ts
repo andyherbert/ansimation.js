@@ -154,7 +154,8 @@ export class TerminalDisplay {
 
     drawCode(code: number) {
         if (this.cursor.row == this.rows) {
-            this.lineFeed();
+            this.scrollUp();
+            this.cursor.row -= 1;
         }
         if (this.iceColors) {
             const fg = this.bold ? this.fg + 8 : this.fg;
@@ -229,25 +230,24 @@ export class TerminalDisplay {
         this.cursor.column = 0;
     }
 
-    scrollUp() {
+    async scrollUp() {
         const sy = this.font.height;
         const width = this.buffer.canvas.width;
         const height = this.buffer.canvas.height - this.font.height;
-        this.buffer.drawImage(this.buffer.canvas, 0, sy, width, height, 0, 0, width, height);
         this.blinkOn.drawImage(this.blinkOn.canvas, 0, sy, width, height, 0, 0, width, height);
         this.blinkOff.drawImage(this.blinkOff.canvas, 0, sy, width, height, 0, 0, width, height);
-        for (let x = 0; x < this.columns - 1; x++) {
+        for (let x = 0; x < this.columns; x++) {
             this.clearAt(x, this.rows - 1);
         }
+        await this.redraw();
     }
 
-    lineFeed() {
+    async lineFeed() {
         if (this.cursor.row == this.rows) {
             if (this.wrap) {
                 this.cursor.row = 0;
             } else {
-                this.scrollUp();
-                this.cursor.row -= 1;
+                await this.scrollUp();
             }
         } else {
             this.cursor.row += 1;
