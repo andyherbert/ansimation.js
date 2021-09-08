@@ -101,7 +101,8 @@ function terminalDisplayPlayer(term, sequences, terminalBlink, baudRate, beeper)
                     term.cursorBack(count);
                     break;
                 }
-                case SequenceType.CursorPosition: {
+                case SequenceType.CursorPosition:
+                case SequenceType.HorizontalAndVerticalPosition: {
                     const row = sequence.data[0] == null ? 1 : sequence.data[0];
                     const column = sequence.data[1] == null ? 1 : sequence.data[1];
                     term.moveCursorTo(column - 1, row - 1);
