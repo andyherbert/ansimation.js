@@ -326,33 +326,33 @@ export default class Font {
         this.indexedBackground = new Array(16);
         this.file = getFileName(name);
     }
-    cursorAt(ctx, column, row) {
+    drawCursorAt(ctx, column, row) {
         ctx.drawImage(this.cursor.canvas, column * this.width, row * this.height);
     }
-    backgroundAt(ctx, column, row, index) {
+    drawBackgroundAt(ctx, column, row, index) {
         if (this.indexedBackground[index] == null) {
             this.indexedBackground[index] = createContextWithRGB(this.width, this.height, ansiPalette[index]);
         }
         ctx.drawImage(this.indexedBackground[index].canvas, column * this.width, row * this.height);
     }
     clearAt(ctx, column, row) {
-        this.backgroundAt(ctx, column, row, 0);
+        this.drawBackgroundAt(ctx, column, row, 0);
     }
     drawCodeAt(ctx, code, column, row, fg, bg) {
         var _a, _b;
-        this.backgroundAt(ctx, column, row, bg);
+        this.drawBackgroundAt(ctx, column, row, bg);
         if (((_b = (_a = this.indexedGlyphs) === null || _a === void 0 ? void 0 : _a[fg]) === null || _b === void 0 ? void 0 : _b[code]) == null) {
             if (this.indexedGlyphs[fg] == null) {
                 this.indexedGlyphs[fg] = new Array(256);
             }
             if (this.glyphs[code] == null) {
-                this.glyphs[code] = this.renderGlyph(code);
+                this.glyphs[code] = this.drawGlyph(code);
             }
             this.indexedGlyphs[fg][code] = sourceInCopy(this.glyphs[code], ansiPalette[fg]);
         }
         ctx.drawImage(this.indexedGlyphs[fg][code].canvas, column * this.width, row * this.height);
     }
-    renderGlyph(code) {
+    drawGlyph(code) {
         const ctx = createContext(this.width, this.height);
         const imageData = ctx.createImageData(this.width, this.height);
         let imageDataPos = 0;

@@ -323,11 +323,11 @@ export default class Font {
         this.file = getFileName(name);
     }
 
-    cursorAt(ctx: CanvasRenderingContext2D, column: number, row: number) {
+    drawCursorAt(ctx: CanvasRenderingContext2D, column: number, row: number) {
         ctx.drawImage(this.cursor.canvas, column * this.width, row * this.height);
     }
 
-    backgroundAt(ctx: CanvasRenderingContext2D, column: number, row: number, index: number) {
+    drawBackgroundAt(ctx: CanvasRenderingContext2D, column: number, row: number, index: number) {
         if (this.indexedBackground[index] == null) {
             this.indexedBackground[index] = createContextWithRGB(
                 this.width,
@@ -339,7 +339,7 @@ export default class Font {
     }
 
     clearAt(ctx: CanvasRenderingContext2D, column: number, row: number) {
-        this.backgroundAt(ctx, column, row, 0);
+        this.drawBackgroundAt(ctx, column, row, 0);
     }
 
     drawCodeAt(
@@ -350,20 +350,20 @@ export default class Font {
         fg: number,
         bg: number,
     ) {
-        this.backgroundAt(ctx, column, row, bg);
+        this.drawBackgroundAt(ctx, column, row, bg);
         if (this.indexedGlyphs?.[fg]?.[code] == null) {
             if (this.indexedGlyphs[fg] == null) {
                 this.indexedGlyphs[fg] = new Array(256);
             }
             if (this.glyphs[code] == null) {
-                this.glyphs[code] = this.renderGlyph(code);
+                this.glyphs[code] = this.drawGlyph(code);
             }
             this.indexedGlyphs[fg][code] = sourceInCopy(this.glyphs[code], ansiPalette[fg]);
         }
         ctx.drawImage(this.indexedGlyphs[fg][code].canvas, column * this.width, row * this.height);
     }
 
-    renderGlyph(code: number): CanvasRenderingContext2D {
+    drawGlyph(code: number): CanvasRenderingContext2D {
         const ctx = createContext(this.width, this.height);
         const imageData = ctx.createImageData(this.width, this.height);
         let imageDataPos = 0;

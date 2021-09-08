@@ -25,7 +25,10 @@ class Cursor {
 }
 export class TerminalDisplay {
     constructor(columns, rows, iceColors, showCursor) {
-        this.blinkState = BlinkState.Off;
+        this.textBlinkFrameCount = 0;
+        this.cursorBlinkFrameCount = 0;
+        this.textBlinkState = BlinkState.On;
+        this.cursorBlinkState = BlinkState.On;
         this.cursor = new Cursor(0, 0);
         this.savedCursor = null;
         this.fg = 7;
@@ -40,20 +43,40 @@ export class TerminalDisplay {
     }
     redraw() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield new Promise((resolve) => window.requestAnimationFrame(resolve));
-            switch (this.blinkState) {
-                case BlinkState.On: {
-                    this.buffer.drawImage(this.blinkOn.canvas, 0, 0);
-                    break;
+            if (this.cursorBlinkFrameCount == 7) {
+                this.cursorBlinkFrameCount = 0;
+                if (this.cursorBlinkState == BlinkState.On) {
+                    this.cursorBlinkState = BlinkState.Off;
                 }
-                case BlinkState.Off: {
-                    this.buffer.drawImage(this.blinkOff.canvas, 0, 0);
-                    if (this.showCursor) {
-                        this.font.cursorAt(this.buffer, this.cursor.column, this.cursor.row);
-                    }
-                    break;
+                else {
+                    this.cursorBlinkState = BlinkState.On;
                 }
             }
+            else {
+                this.cursorBlinkFrameCount += 1;
+            }
+            if (this.textBlinkFrameCount == 12) {
+                this.textBlinkFrameCount = 0;
+                if (this.textBlinkState == BlinkState.On) {
+                    this.textBlinkState = BlinkState.Off;
+                }
+                else {
+                    this.textBlinkState = BlinkState.On;
+                }
+            }
+            else {
+                this.textBlinkFrameCount += 1;
+            }
+            if (this.textBlinkState == BlinkState.On) {
+                this.buffer.drawImage(this.blinkOn.canvas, 0, 0);
+            }
+            else {
+                this.buffer.drawImage(this.blinkOff.canvas, 0, 0);
+            }
+            if (this.showCursor && this.cursorBlinkState == BlinkState.On) {
+                this.font.drawCursorAt(this.buffer, this.cursor.column, this.cursor.row);
+            }
+            yield new Promise((resolve) => window.requestAnimationFrame(resolve));
         });
     }
     fetchFont(fontName, fontPath, scale) {
@@ -66,18 +89,6 @@ export class TerminalDisplay {
             this.blinkOn = createContext(width, height);
             this.blinkOff = createContext(width, height);
             yield this.clearScreen();
-            this.interval = setInterval(() => __awaiter(this, void 0, void 0, function* () {
-                switch (this.blinkState) {
-                    case BlinkState.On: {
-                        this.blinkState = BlinkState.Off;
-                        break;
-                    }
-                    case BlinkState.Off: {
-                        this.blinkState = BlinkState.On;
-                        break;
-                    }
-                }
-            }), 250);
             this.buffer.canvas.style.cssText = `
         image-rendering: crisp-edges;
         image-rendering: pixelated;
@@ -153,7 +164,7 @@ export class TerminalDisplay {
         else {
             const fg = this.bold ? this.fg + 8 : this.fg;
             if (this.blink) {
-                this.font.backgroundAt(this.blinkOn, this.cursor.column, this.cursor.row, this.bg);
+                this.font.drawBackgroundAt(this.blinkOn, this.cursor.column, this.cursor.row, this.bg);
             }
             else {
                 this.font.drawCodeAt(this.blinkOn, code, this.cursor.column, this.cursor.row, fg, this.bg);
