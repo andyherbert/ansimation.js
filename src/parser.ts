@@ -32,7 +32,7 @@ export class Sequence {
 
 class SequenceBuilder {
     data: Array<number | null> = [];
-    currentValue: number | null = null;
+    currentValue: number | null;
 
     parseNumber(value: number) {
         if (this.currentValue == null) {

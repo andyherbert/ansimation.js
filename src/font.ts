@@ -311,11 +311,11 @@ function getFileName(fontName: string): string {
 
 export default class Font {
     file: string;
-    bytes: Uint8Array = null;
-    width: number = null;
-    height: number = null;
+    bytes: Uint8Array;
+    width: number;
+    height: number;
     glyphs: CanvasRenderingContext2D[] = new Array(256);
-    indexedGlyphs: CanvasRenderingContext2D[][] = new Array(16);
+    indexedGlyphs: CanvasRenderingContext2D[][] = Array.from({ length: 16 }, () => new Array(256));
     indexedBackground: CanvasRenderingContext2D[] = new Array(16);
     cursor: CanvasRenderingContext2D;
 
@@ -351,10 +351,7 @@ export default class Font {
         bg: number,
     ) {
         this.drawBackgroundAt(ctx, column, row, bg);
-        if (this.indexedGlyphs?.[fg]?.[code] == null) {
-            if (this.indexedGlyphs[fg] == null) {
-                this.indexedGlyphs[fg] = new Array(256);
-            }
+        if (this.indexedGlyphs[fg][code] == null) {
             if (this.glyphs[code] == null) {
                 this.glyphs[code] = this.drawGlyph(code);
             }

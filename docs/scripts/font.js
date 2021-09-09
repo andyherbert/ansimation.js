@@ -318,11 +318,8 @@ function getFileName(fontName) {
 }
 export default class Font {
     constructor(name) {
-        this.bytes = null;
-        this.width = null;
-        this.height = null;
         this.glyphs = new Array(256);
-        this.indexedGlyphs = new Array(16);
+        this.indexedGlyphs = Array.from({ length: 16 }, () => new Array(256));
         this.indexedBackground = new Array(16);
         this.file = getFileName(name);
     }
@@ -339,12 +336,8 @@ export default class Font {
         this.drawBackgroundAt(ctx, column, row, 0);
     }
     drawCodeAt(ctx, code, column, row, fg, bg) {
-        var _a, _b;
         this.drawBackgroundAt(ctx, column, row, bg);
-        if (((_b = (_a = this.indexedGlyphs) === null || _a === void 0 ? void 0 : _a[fg]) === null || _b === void 0 ? void 0 : _b[code]) == null) {
-            if (this.indexedGlyphs[fg] == null) {
-                this.indexedGlyphs[fg] = new Array(256);
-            }
+        if (this.indexedGlyphs[fg][code] == null) {
             if (this.glyphs[code] == null) {
                 this.glyphs[code] = this.drawGlyph(code);
             }

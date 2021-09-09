@@ -28,7 +28,6 @@ export class Sequence {
 class SequenceBuilder {
     constructor() {
         this.data = [];
-        this.currentValue = null;
     }
     parseNumber(value) {
         if (this.currentValue == null) {

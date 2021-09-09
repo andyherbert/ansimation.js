@@ -34,7 +34,7 @@ export class TerminalDisplay {
     textBlinkState: BlinkState = BlinkState.On;
     cursorBlinkState: BlinkState = BlinkState.On;
     cursor: Cursor = new Cursor(0, 0);
-    savedCursor: Cursor | null = null;
+    savedCursor: Cursor | null;
     fg: number = 7;
     bg: number = 0;
     bold: boolean = false;

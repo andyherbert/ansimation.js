@@ -30,7 +30,6 @@ export class TerminalDisplay {
         this.textBlinkState = BlinkState.On;
         this.cursorBlinkState = BlinkState.On;
         this.cursor = new Cursor(0, 0);
-        this.savedCursor = null;
         this.fg = 7;
         this.bg = 0;
         this.bold = false;
