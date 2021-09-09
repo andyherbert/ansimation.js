@@ -184,7 +184,11 @@ export class AnsiMusicPlayer {
     async parse(bytes: number[], term: TerminalDisplay) {
         await this.beeper.resumeIfSuspended();
         for (let pos = 0; pos < bytes.length; pos++) {
-            const byte = bytes[pos];
+            let byte = bytes[pos];
+            if (byte >= 0x61 && byte <= 0x67) {
+                // 'a'..'g'
+                byte -= 0x20;
+            }
             if (byte >= 0x41 && byte <= 0x47) {
                 // 'A'..'G'
                 const note = byte - 0x41;
